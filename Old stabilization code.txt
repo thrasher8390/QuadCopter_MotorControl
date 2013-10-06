@@ -1,0 +1,216 @@
+void motorX(int increase,int xDiff)
+{
+    int time = 8;
+
+    //zeroing out hover speed when quad copter is stable
+    if(increase == 0)
+    {
+        x_timer = 0;
+        if(x_hover_adjust > 0)
+            x_hover_adjust--;
+        else if(x_hover_adjust<0)
+            x_hover_adjust++;
+    }
+    else
+        x_timer += increase;
+        
+        
+    int xDiff = xChange -xChange_prev;
+        xChange_prev = xChange;
+
+    if(x_timer > time)
+    {
+        int mult = x_timer / time;
+        //increase = (increase);//stabalizeFactor*increase;
+        motorSpeedCorrection[0] += .1*mult;
+        motorSpeedCorrection[1] -= .1;
+
+        if(motorSpeedCorrection[1]<min_speed)
+            motorSpeedCorrection[1] = min_speed;
+        if(motorSpeedCorrection[0]> max_speed_hover)
+            motorSpeedCorrection[0] = max_speed_hover;
+
+        x_timer -= time*mult;
+        x_hover_adjust++;
+         //updateCalibration
+         //xyzCal[0] += 1;
+    }
+    else if(x_timer < (-time))
+    {
+        int mult = -x_timer / time;
+        //increase = -increase;//stabalizeFactor*(-increase);
+        motorSpeedCorrection[1] += .1*mult;
+        motorSpeedCorrection[0] -= .1;
+
+        if(motorSpeedCorrection[1]>max_speed_hover)
+            motorSpeedCorrection[1] = max_speed_hover;
+        if(motorSpeedCorrection[0]<min_speed)
+            motorSpeedCorrection[0] = min_speed;
+
+        x_timer += time*mult;
+        x_hover_adjust--;
+         //update Cal
+         //xyzCal[0] -= 1;
+
+
+    }
+    /*
+    if(increase > 0)
+    {
+        increase = increase;//stabalizeFactor*increase;
+        motorSpeedCorrection[0] += increase;
+        motorSpeedCorrection[1] -= increase/stabalizeFactor;
+
+        if(motorSpeedCorrection[1]<min_speed)
+            motorSpeedCorrection[1] = min_speed;
+        if(motorSpeedCorrection[0]> max_speed)
+            motorSpeedCorrection[0] = max_speed;
+         //updateCalibration
+         //xyzCal[0] += 1;
+    }
+    else if(increase < 0)
+    {
+        increase = -increase;//stabalizeFactor*(-increase);
+        motorSpeedCorrection[1] += increase;
+        motorSpeedCorrection[0] -= increase/stabalizeFactor;
+
+        if(motorSpeedCorrection[1]>max_speed)
+            motorSpeedCorrection[1] = max_speed;
+        if(motorSpeedCorrection[0]<min_speed)
+            motorSpeedCorrection[0] = min_speed;
+
+         //update Cal
+         //xyzCal[0] -= 1;
+    }
+    */
+    if(x_hover_adjust > motorxy_hoveradjust_thresh)
+    {
+        motorSpeedHover[0]+= motorxy_hover_increment;
+        motorSpeedHover[1]-= motorxy_hover_increment;
+        //digitalWrite(ledpin, HIGH);  // turn ON the LED
+        x_hover_adjust = 0;
+    }else if(x_hover_adjust < -motorxy_hoveradjust_thresh)
+    {
+        motorSpeedHover[0]-= motorxy_hover_increment;
+        motorSpeedHover[1]+= motorxy_hover_increment;
+        //digitalWrite(ledpin, LOW);  // turn ON the LED
+        x_hover_adjust = 0;
+    }
+
+    return;
+}
+
+void motorY(int increase)
+{
+    int time = 8;
+    //zeroing out hover speed when quad copter is stable
+    if(increase == 0)
+    {
+        y_timer = 0;
+        if(y_hover_adjust > 0)
+            y_hover_adjust--;
+        else if(y_hover_adjust<0)
+            y_hover_adjust++;
+    }
+    else
+        y_timer += increase;
+
+    if(y_timer > time)
+    {
+        int mult = y_timer / time;
+        //increase = (increase);//stabalizeFactor*increase;
+        motorSpeedCorrection[2] += .1 * mult;
+        motorSpeedCorrection[3] -= .1;
+
+        if(motorSpeedCorrection[3]<min_speed)
+            motorSpeedCorrection[3] = min_speed;
+        if(motorSpeedCorrection[2]> max_speed_hover)
+            motorSpeedCorrection[2] = max_speed_hover;
+
+        y_timer -= time*mult;
+        y_hover_adjust++;
+         //updateCalibration
+         //xyzCal[0] += 1;
+
+    }
+    else if(y_timer < (-time))
+    {
+        int mult = -y_timer / time;
+        //increase = -increase;//stabalizeFactor*(-increase);
+        motorSpeedCorrection[3] += .1*mult;
+        motorSpeedCorrection[2] -= .1;
+
+        if(motorSpeedCorrection[3]>max_speed_hover)
+            motorSpeedCorrection[3] = max_speed_hover;
+        if(motorSpeedCorrection[2]<min_speed)
+            motorSpeedCorrection[2] = min_speed;
+
+        y_timer += time*mult;
+        y_hover_adjust--;
+         //update Cal
+         //xyzCal[0] -= 1;
+    }
+    /*
+    if(increase > 0)
+    {
+        increase = increase;//stabalizeFactor*increase;
+        motorSpeedCorrection[2] += increase;
+        motorSpeedCorrection[3] -= increase/stabalizeFactor;
+
+        if(motorSpeedCorrection[3]<min_speed)
+            motorSpeedCorrection[3] = min_speed;
+        if(motorSpeedCorrection[2]>max_speed)
+            motorSpeedCorrection[2] = max_speed;
+         //updateCalibration
+         //xyzCal[0] += 1;
+    }
+    else if(increase < 0)
+    {
+        increase = -increase;//stabalizeFactor*(-increase);
+        motorSpeedCorrection[3] += increase;
+        motorSpeedCorrection[2] -= increase/stabalizeFactor;
+
+        if(motorSpeedCorrection[3]>max_speed)
+            motorSpeedCorrection[3] = max_speed;
+        if(motorSpeedCorrection[2]<min_speed)
+            motorSpeedCorrection[2] = min_speed;
+
+         //update Cal
+         //xyzCal[0] -= 1;
+    }
+         */
+    if(y_hover_adjust > motorxy_hoveradjust_thresh)
+    {
+        motorSpeedHover[2]+= motorxy_hover_increment;
+        motorSpeedHover[3]-= motorxy_hover_increment;
+        //digitalWrite(ledpin, HIGH);  // turn ON the LED
+        y_hover_adjust = 0;
+    }else if(y_hover_adjust < -motorxy_hoveradjust_thresh)
+    {
+        motorSpeedHover[2]-= motorxy_hover_increment;
+        motorSpeedHover[3]+= motorxy_hover_increment;
+        //digitalWrite(ledpin, LOW);  // turn ON the LED
+        y_hover_adjust = 0;
+    }
+
+    return;
+}
+
+void motorZ(int increase)
+{
+    //int speed = 0;
+    for(int i = 0 ; i < 4 ;  i++)
+    {
+        //motorSpeedCorrection[i] += increase;//stabalizeFactor*increase;
+
+    }
+    //TODO: adjust hover settings
+    if(increase > 0)
+    {
+
+    }else
+    {
+    }
+
+    return;
+}
