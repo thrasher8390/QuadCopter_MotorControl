@@ -4,7 +4,7 @@
 #include <SPI.h>
 #include <Arduino.h>
 
-#define DEBUG 1
+#define DEBUG 2
 
 //Assign the Chip Select signal to pin 52.
 #define accelCS  10
@@ -79,8 +79,8 @@ void accelSetup(){
     digitalWrite(accelCS, HIGH);
     //Before communication starts, the Chip Select pin needs to be set high.
     delay(5);
-    writeRegister(DATA_FORMAT, 0X03);// +/-16g
-    sensitivity = 16;
+    writeRegister(DATA_FORMAT, 0X01);// +/-4g
+    sensitivity = 4;
     delay(5);
     writeRegister(POWER_CTL, 0X08);
     delay(5);
@@ -124,7 +124,7 @@ void readAccel(){
 void accelCalibration()
 {
     //A whole second of sampling at 3200Hz
-    int numSamples = 360;//1 second
+    int numSamples = 720;//1 second
 
     int x1 =0, y1=0, z1=0;
     for(int i = 0 ; i < numSamples  ; i++)

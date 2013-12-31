@@ -1,11 +1,11 @@
 # depslib dependency file v1.0
-1373581490 source:e:\users\dlthrasher\development\arduino\quadcopter\quadcopter.ino
+1385424195 source:e:\users\dlthrasher\development\arduino\quadcopter\quadcopter.ino
 	<Arduino.h>
 	<Accelerometer.c>
 	<MotorControl.c>
 	<BlueTooth.c>
 
-1362990550 e:\users\dlthrasher\downloads\computer system engineering\development\arduino\codeblocks\arduino\hardware\arduino\cores\arduino\arduino.h
+1362986950 e:\users\dlthrasher\downloads\computer system engineering\development\arduino\codeblocks\arduino\hardware\arduino\cores\arduino\arduino.h
 	<stdlib.h>
 	<string.h>
 	<math.h>
@@ -18,41 +18,41 @@
 	"HardwareSerial.h"
 	"pins_arduino.h"
 
-1362990550 e:\users\dlthrasher\downloads\computer system engineering\development\arduino\codeblocks\arduino\hardware\arduino\cores\arduino\binary.h
+1362986950 e:\users\dlthrasher\downloads\computer system engineering\development\arduino\codeblocks\arduino\hardware\arduino\cores\arduino\binary.h
 
-1362990550 e:\users\dlthrasher\downloads\computer system engineering\development\arduino\codeblocks\arduino\hardware\arduino\cores\arduino\wcharacter.h
+1362986950 e:\users\dlthrasher\downloads\computer system engineering\development\arduino\codeblocks\arduino\hardware\arduino\cores\arduino\wcharacter.h
 	<ctype.h>
 
-1362990550 e:\users\dlthrasher\downloads\computer system engineering\development\arduino\codeblocks\arduino\hardware\arduino\cores\arduino\wstring.h
+1362986950 e:\users\dlthrasher\downloads\computer system engineering\development\arduino\codeblocks\arduino\hardware\arduino\cores\arduino\wstring.h
 	<stdlib.h>
 	<string.h>
 	<ctype.h>
 	<avr/pgmspace.h>
 
-1362990550 e:\users\dlthrasher\downloads\computer system engineering\development\arduino\codeblocks\arduino\hardware\arduino\cores\arduino\hardwareserial.h
+1362986950 e:\users\dlthrasher\downloads\computer system engineering\development\arduino\codeblocks\arduino\hardware\arduino\cores\arduino\hardwareserial.h
 	<inttypes.h>
 	"Stream.h"
 	"USBAPI.h"
 
-1362990550 e:\users\dlthrasher\downloads\computer system engineering\development\arduino\codeblocks\arduino\hardware\arduino\cores\arduino\stream.h
+1362986950 e:\users\dlthrasher\downloads\computer system engineering\development\arduino\codeblocks\arduino\hardware\arduino\cores\arduino\stream.h
 	<inttypes.h>
 	"Print.h"
 
-1362990550 e:\users\dlthrasher\downloads\computer system engineering\development\arduino\codeblocks\arduino\hardware\arduino\cores\arduino\print.h
+1362986950 e:\users\dlthrasher\downloads\computer system engineering\development\arduino\codeblocks\arduino\hardware\arduino\cores\arduino\print.h
 	<inttypes.h>
 	<stdio.h>
 	"WString.h"
 	"Printable.h"
 
-1362990550 e:\users\dlthrasher\downloads\computer system engineering\development\arduino\codeblocks\arduino\hardware\arduino\cores\arduino\printable.h
+1362986950 e:\users\dlthrasher\downloads\computer system engineering\development\arduino\codeblocks\arduino\hardware\arduino\cores\arduino\printable.h
 	<new.h>
 
-1362990550 e:\users\dlthrasher\downloads\computer system engineering\development\arduino\codeblocks\arduino\hardware\arduino\cores\arduino\new.h
+1362986950 e:\users\dlthrasher\downloads\computer system engineering\development\arduino\codeblocks\arduino\hardware\arduino\cores\arduino\new.h
 	<stdlib.h>
 
-1362990550 e:\users\dlthrasher\downloads\computer system engineering\development\arduino\codeblocks\arduino\hardware\arduino\cores\arduino\usbapi.h
+1362986950 e:\users\dlthrasher\downloads\computer system engineering\development\arduino\codeblocks\arduino\hardware\arduino\cores\arduino\usbapi.h
 
-1362990550 e:\users\dlthrasher\downloads\computer system engineering\development\arduino\codeblocks\arduino\hardware\arduino\variants\standard\pins_arduino.h
+1362986950 e:\users\dlthrasher\downloads\computer system engineering\development\arduino\codeblocks\arduino\hardware\arduino\variants\standard\pins_arduino.h
 	<avr/pgmspace.h>
 
 1370915209 e:\users\dlthrasher\development\arduino\quadcopter\accelerometer.h
@@ -63,16 +63,16 @@
 	<SPI.h>
 	<Arduino.h>
 
-1378690423 e:\users\dlthrasher\development\arduino\quadcopter\accelerometer.c
+1381105844 e:\users\dlthrasher\development\arduino\quadcopter\accelerometer.c
 	<SPI.h>
 	<Arduino.h>
 
-1380494817 e:\users\dlthrasher\development\arduino\quadcopter\motorcontrol.c
+1386373180 e:\users\dlthrasher\development\arduino\quadcopter\motorcontrol.c
 	<Arduino.h>
 	<Accelerometer.c>
 	<BlueTooth.c>
 	<Servo.h>
 
-1380394893 e:\users\dlthrasher\development\arduino\quadcopter\bluetooth.c
+1385525053 e:\users\dlthrasher\development\arduino\quadcopter\bluetooth.c
 	<Arduino.h>
 

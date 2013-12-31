@@ -2,8 +2,10 @@
 #define BLUE_TOOTH_H
 
 #include <Arduino.h>
-//#include <MotorControl.c>
-
+/********************************************//**
+ * \brief imported from MotorControl.c for use when communicating via bluetooth
+ ***********************************************/
+extern POWER_STATES currentPowerState;
 
 int ledpin = 2;
 int RxD = 0;
@@ -20,7 +22,7 @@ void bluetoothSetup()
 {
   pinMode(ledpin, OUTPUT);  // pin 48 (on-board LED) as OUTPUT
   pinMode(RxD, INPUT);
- pinMode(TxD, OUTPUT);
+  pinMode(TxD, OUTPUT);
   Serial.begin(9600);       // start serial communication at 9600bps
 }
 
@@ -32,7 +34,8 @@ void bluetoothReceiveLoop() {
 
     valIndex++;
     if(valIndex == 1){
-        if(val[0] != 0x10 && val[0] != 0x11 && val[0] != 0x12 && val[0] != 0x20 && val[0] != 0x21 && val[0] != 0x22 && val[0] != 0x44){
+        if(val[0] != 0x10 && val[0] != 0x11 && val[0] != 0x12 && val[0] != 0x20 && val[0] != 0x21 && val[0] != 0x22 && val[0] != 0x44)
+        {
             valIndex = 0;
         }
     }
@@ -41,12 +44,12 @@ void bluetoothReceiveLoop() {
   if( valIndex == 0x3 && (val[0] == 0x10 || val[0] == 0x11 || val[0] == 0x12 || val[0] == 0x20 || val[0] == 0x21 || val[0] == 0x22))               // if 'H' was received
   {
     valIndex = 0;
-    if(initialize == 0 && val[0] == 0x10)
+    if(currentPowerState == OFF && val[0] == 0x10)
     {
-        initialize = 1;
-    }else if(initialize == 1 && val[0] == 0x20)
+        currentPowerState = IDLE;
+    }else if(currentPowerState == IDLE && val[0] == 0x20)
     {
-        initialize = 2;
+        currentPowerState = ON;
     }else if(val[0] == 0x10 || val[0] == 0x11)
     {
         x = val[1];
@@ -73,11 +76,11 @@ void bluetoothReceiveLoop() {
   else if(valIndex == 0x03 )
   {
       valIndex = 0;
-      initialize = 0;
+      currentPowerState = OFF;
   }
+  else
+  {
 
-  else {
-    //digitalWrite(ledpin, LOW);   // otherwise turn it OFF
   }
 }
 

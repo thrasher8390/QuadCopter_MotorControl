@@ -30,25 +30,3 @@ void loop()
   bluetoothReceiveLoop();
 
 }
-
-
-
-
-void fade_LED(int ledPin)
-{
-  for(int fadeValue = 0 ; fadeValue <= max_speed; fadeValue +=5) {
-    // sets the value (range from 0 to 255):
-    analogWrite(ledPin, fadeValue);
-    // wait for 30 milliseconds to see the dimming effect
-    delay(30);
-  }
-
-  // fade out from max to min in increments of 5 points:
-  for(int fadeValue = max_speed ; fadeValue >= 0; fadeValue -=5) {
-    // sets the value (range from 0 to 255):
-    analogWrite(ledPin, fadeValue);
-    // wait for 30 milliseconds to see the dimming effect
-    delay(30);
-  }
-}
-
