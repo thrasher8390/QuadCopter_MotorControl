@@ -4,7 +4,7 @@
 #include <SPI.h>
 #include <Arduino.h>
 
-#define DEBUG 2
+#define DEBUG 3
 
 //Assign the Chip Select signal to pin 52.
 #define accelCS  10

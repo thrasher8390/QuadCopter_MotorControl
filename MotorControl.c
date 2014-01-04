@@ -1,3 +1,7 @@
+/********************************************//**
+ *  \brief
+ *  \
+ ***********************************************/
 #ifndef MOTOR_CONTROL_H
 #define MOTOR_CONTROL_H
 
@@ -9,26 +13,28 @@
 #include <Servo.h>
 
 #define max_speed 150
-#define min_speed 68
 #define max_speed_hover 120
 #define min_speed_hover 75
+#define min_speed 68
 #define ACCEL_SENSITIVITY_BUFFER 0x100
 
 extern int ledpin;
-extern int initialize;
 extern char x;
 extern char y;
 extern char z;
+extern char rotation;
 double hoverMaxDif = (max_speed - max_speed_hover);
 
-static void motorX(double);//stabilization procedure for x-axis
-static void motorY(double);//stabilization procedure for y-axis
-static void motorZ(double);//stabilization procedure for z-axis
-static void controller(void);//takes input from bluetooth and decides how to change motor speeds
-static void motorBounds(void);//keeps the speed of the motors within their limits
-static void oscilateMotors(void); //used for debugging
-static double absoluteValue(double);
-
+static void     motorX(double);//stabilization procedure for x-axis
+static void     motorY(double);//stabilization procedure for y-axis
+static void     motorZ(double);//stabilization procedure for z-axis
+static void     controller(void);//takes input from bluetooth and decides how to change motor speeds
+static void     motorBounds(void);//keeps the speed of the motors within their limits
+static void     oscilateMotors(void); //used for debugging
+static double   absoluteValue(double);
+static void     transitionToIdleState(void);
+static void     transitionToOffState(void);
+static void     transitionToOnState(void);
 //Motor arrays
 //0 = -x/left (black arm)
 //1 = x/right (red arm)
@@ -48,6 +54,11 @@ double y_hover_adjust = 0;
 double motorxy_hoveradjust_thresh = 1024;
 double motorxy_hover_increment = .125;
 
+
+//Set by the forground and achieved by the background
+int targetAccelerometer_X = 0;
+int targetAccelerometer_Y = 0;
+
 //increase is the proportional term
 double xChange_d = 0;
 double yChange_d = 0;
@@ -60,24 +71,21 @@ double kd = 0;//kp*.90; //derivative
 
 //determines how quickly motorSpeedCorrection returns to motorSpeedHover
 double stabalizeFactor = (max_speed - max_speed_hover);
-
-#define CONTROLLER_DUTY 3
-int controllerDutyCt = 0;
 //used to correct the speed of up and down for z
 double  correction  =   1.41732;
 /** An enum type.
 *  The documentation block cannot be put after the enum!
 */
 enum POWER_STATES
-        {  OFF,      /**< \brief details the differen states the motors can be in */
-           IDLE,     /**< \brief details the differen states the motors can be in */
-           ON        /**< \brief details the differen states the motors can be in */
+        {  OFF,      /**< \brief details the different states the motors can be in */
+           IDLE,     /**< \brief details the different states the motors can be in */
+           ON        /**< \brief details the different states the motors can be in */
         };
 /********************************************//**
  *  \brief Used to keep the state of which the motors are in
  ***********************************************/
 POWER_STATES currentPowerState = OFF;
-
+POWER_STATES requestedPowerState = OFF;
 void motorSetup()
 {
     motorArray[0].attach(3);
@@ -94,82 +102,63 @@ void motorSetup()
     }
 }
 
-void motorControl()
+
+void MotorStateMachine()
 {
-    if(currentPowerState == OFF )
+    if(requestedPowerState != currentPowerState)
     {
-        //reset STATE
-        for(int i = 0; i < 4; i++)
+        switch(requestedPowerState)
         {
-            motorSpeedHover[i] = min_speed - 30 ;
-            motorSpeedCorrection[i] = motorSpeedHover[i];
-            motorSpeedPrevious[i] = 0xFFFF;
+        case OFF:
+            transitionToOffState();
+            break;
+        case IDLE:
+            transitionToIdleState();
+            break;
+        case ON:
+            transitionToOnState();
+            break;
+        default:
+            break;
         }
-        //digitalWrite(ledpin, HIGH);   // ready to fly!
     }
-    else if(currentPowerState == IDLE)
-    {
-        //oscilateMotors();
-
-
-        //Motors initialized (they start spinning)
-        digitalWrite(ledpin, LOW);   // otherwise turn it OFF
-     for(int i = 0; i < 4; i++)
-        {
-            motorSpeedHover[i] = min_speed;
-            motorSpeedCorrection[i] = motorSpeedHover[i];
-        }
-        //accelCalibration(); //Calibration
-
-    }
-    else if(currentPowerState == ON)
-    {
-
-
-        //todo try averaging 3 accell readings???
-/*
-        for(int i = 0 ; i <numAvg; i++)
-        {
-            readAccel();
-            for(int j = 0 ; j<3; j++)
-            {
-                accelAvg[j] += xyz[j];
-            }
-        }
-
-        //set xyz[] to the accelAvg and then reset accelAvg back to zero
-        for(int i = 0; i <3; i++)
-        {
-            xyz[i] = accelAvg[i]/numAvg;
-            accelAvg[i] = 0;
-        }
-
+}
+/**
+*\brief Meant to decide the setpoint of where the quadcopter should be. It does so by setting the target accelerometer reading for both x and y
 */
-        //controller every 10th time
-        if(controllerDutyCt >= CONTROLLER_DUTY)
-        {
-            controller();
-            controllerDutyCt = 0;
-        }
-        controllerDutyCt++;
-        readAccel();
-        double xChange = xyz[0] - xyzCal[0];
-        motorX(xChange);
+void ForegroundMotorDriver()
+{
+    readAccel();
+    targetAccelerometer_X = 0;
+    targetAccelerometer_Y = 0;
+}
 
-        readAccel();
-        double yChange = xyz[1] - xyzCal[1];
-        motorY(yChange);
-        //readAccel()();
-        //double zChange = xyz[2] - xyzCal[2];
-            //motorZ(zChange);
-        //}
-
-        motorBounds();
-    }
+/**
+*\brief This will be used as a PI controller that tries to get the copter to the setpoint which will be set from the foregroundMotorDriver()
+*/
+void BackgroundMotorDriver()
+{
+    //This function will not try to get back to zero but will try to get to the position set by the the foregroundMotorControl
+    //This function will call upon the PID loop for all motors and
 
 
+    //if our reading for x is at -2 and our callibration is 0 but we set the target to be -1 then we are making more incremental steps to reaching our goal of stability
+    double xChange = xyz[0] - xyzCal[0] - targetAccelerometer_X;
+    double yChange = xyz[1] - xyzCal[1] - targetAccelerometer_Y;
+    //double zChange = xyz[2] - xyzCal[2];
+
+    motorX(xChange);
+    motorY(yChange);
+    //motorZ(zChange);
+
+    motorBounds();
+}
+
+void MotorControl()
+{
+    //if we have a new speed for a given motor than we adjust it
     for(int i = 0 ; i < 4; i++) {
-      // sets the value (range from 0 to 180):
+      // sets the value (range from min_speed to max_speed):
 
       if(motorSpeedCorrection[i] != motorSpeedPrevious[i])
       {
@@ -181,10 +170,7 @@ void motorControl()
           //digitalWrite(2, LOW);
       }
     }
-
-
-
-    for(int i = 0 ; i < 4 && initialize > 1 ; i++ )
+    for(int i = 0 ; i < 4; i++ )
     {
         //motorSpeedCorrection can not be greater than hoverMaxDif away from hoverSpeedHover
         //TODO
@@ -468,6 +454,10 @@ void controller()
     }
 }
 
+
+/**
+*\brief Meant to adjust motorSpeedCorrection and motorSpeedHover so that they stay within the bounds set for them.
+*/
 void motorBounds()
 {
     //Used to make sure speed controls are accepted values
@@ -488,6 +478,12 @@ void motorBounds()
     motorSpeedHoverAvg /= 4;
     for(int i = 0 ; i<4; i++)
     {
+        /*
+        If our averageHover < minHover then we add the difference from averageHover to minHover so that our new hoverAverage = minHover
+        This will increase the overall speed of all the blades which will need to look at the value of min_speed_hover if this causes an issue
+        For the maxSpeed you can see that we take hover - average where average is greater than hover so in the end we are subtracting from each motor speed hover value
+        Remember* This is just a hover value. Does not directly control the speed of each blade!
+        */
         if(motorSpeedHoverAvg < min_speed_hover)
         {
             motorSpeedHover[i] += (min_speed_hover - motorSpeedHoverAvg);
@@ -498,8 +494,57 @@ void motorBounds()
         }
     }
 }
+
 /**
-*@brief turns motors on one by one (-x,x,-y,y)
+*\brief Transitions Motors to off state by lowing the motorSpeed
+*/
+void transitionToOffState()
+{
+
+    //reset STATE
+        for(int i = 0; i < 4; i++)
+        {
+            //need to set to min_speed - 30 because 0 is an invalid input into the ESCs. Issue with android servo code
+            motorSpeedHover[i] = min_speed - 30 ;
+            motorSpeedCorrection[i] = motorSpeedHover[i];
+            motorSpeedPrevious[i] = 0xFFFF;
+        }
+        //digitalWrite(ledpin, HIGH);   // ready to fly!
+        motorBounds();
+        currentPowerState = OFF;
+}
+
+/**
+*\brief Transitions Motors to Idle state by turning motors on at a very low speed
+*/
+void transitionToIdleState()
+{
+    //oscilateMotors();
+
+
+        //Motors initialized (they start spinning)
+        digitalWrite(ledpin, LOW);   // otherwise turn it OFF
+     for(int i = 0; i < 4; i++)
+        {
+            motorSpeedHover[i] = min_speed;
+            motorSpeedCorrection[i] = motorSpeedHover[i];
+        }
+        //accelCalibration(); //Calibration
+        motorBounds();
+        currentPowerState = IDLE;
+}
+
+/**
+*\brief Transitions Motors to ON state
+*/
+void transitionToOnState()
+{
+        motorBounds();
+        currentPowerState = ON;
+}
+
+/**
+*@brief turns motors on one by one (-x,x,-y,y) for testing
 */
 void oscilateMotors()
 {
@@ -522,13 +567,6 @@ void oscilateMotors()
 
 double absoluteValue(double num)
 {
-    if(num >= 0)
-    {
-        return (num);
-    }
-    else
-    {
-        return (-num);
-    }
+    return num > 0? num : (-num);
 }
 #endif // MOTOR_CONTROL_H

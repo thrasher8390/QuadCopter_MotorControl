@@ -76,3 +76,21 @@
 1385525053 e:\users\dlthrasher\development\arduino\quadcopter\bluetooth.c
 	<Arduino.h>
 
+1388538105 source:e:\users\dlthrasher\development\projects via source tree\arduinomotorcontrol_quadcopter\quadcopter.ino
+	<Arduino.h>
+	<Accelerometer.c>
+	<MotorControl.c>
+	<BlueTooth.c>
+
+1388537160 e:\users\dlthrasher\development\projects via source tree\arduinomotorcontrol_quadcopter\accelerometer.c
+	<SPI.h>
+	<Arduino.h>
+
+1388538110 e:\users\dlthrasher\development\projects via source tree\arduinomotorcontrol_quadcopter\motorcontrol.c
+	<Arduino.h>
+	<Accelerometer.c>
+	<Servo.h>
+
+1388535260 e:\users\dlthrasher\development\projects via source tree\arduinomotorcontrol_quadcopter\bluetooth.c
+	<Arduino.h>
+

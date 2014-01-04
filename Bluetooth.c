@@ -6,13 +6,13 @@
  * \brief imported from MotorControl.c for use when communicating via bluetooth
  ***********************************************/
 extern POWER_STATES currentPowerState;
+extern POWER_STATES requestedPowerState;
 
 int ledpin = 2;
 int RxD = 0;
 int TxD = 1;
 char val[10];
 int valIndex = 0;
-int initialize = 0;
 char x = 0;
 char y = 0;
 char z = 0;
@@ -46,16 +46,20 @@ void bluetoothReceiveLoop() {
     valIndex = 0;
     if(currentPowerState == OFF && val[0] == 0x10)
     {
-        currentPowerState = IDLE;
+        requestedPowerState = IDLE;
     }else if(currentPowerState == IDLE && val[0] == 0x20)
     {
-        currentPowerState = ON;
-    }else if(val[0] == 0x10 || val[0] == 0x11)
+        requestedPowerState = ON;
+    }
+    //Action down or action Move fo x,y
+    else if(val[0] == 0x10 || val[0] == 0x11)
     {
         x = val[1];
         y = val[2];
         //digitalWrite(ledpin, LOW);   // otherwise turn it OFF
-    }else if(val[0] == 0x20 || val[0] == 0x21)
+    }
+    //Action down or Action move for rotation,z
+    else if(val[0] == 0x20 || val[0] == 0x21)
     {
         rotation = val[1];
         z = val[2];
@@ -73,10 +77,12 @@ void bluetoothReceiveLoop() {
 
     //digitalWrite(ledpin, HIGH);  // turn ON the LED
   }
+  // we got a valid message but an invalid command so we turn off!
+  //TODO need to be carefull for this, what if it happens when we're in mid flight? BOOOOOOOOOOOOOM!!!!!!!! CRASHHHH BURN!!!!!!!!!
   else if(valIndex == 0x03 )
   {
       valIndex = 0;
-      currentPowerState = OFF;
+      requestedPowerState = OFF;
   }
   else
   {
