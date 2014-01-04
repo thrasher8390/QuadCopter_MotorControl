@@ -19,6 +19,7 @@ extern int initialize;
 extern char x;
 extern char y;
 extern char z;
+extern char rotation;
 double hoverMaxDif = (max_speed - max_speed_hover);
 
 static void motorX(double);//stabilization procedure for x-axis

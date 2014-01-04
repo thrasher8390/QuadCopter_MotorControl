@@ -67,12 +67,11 @@
 	<SPI.h>
 	<Arduino.h>
 
-1386373180 e:\users\dlthrasher\development\arduino\quadcopter\motorcontrol.c
+1388716126 e:\users\dlthrasher\development\arduino\quadcopter\motorcontrol.c
 	<Arduino.h>
 	<Accelerometer.c>
-	<BlueTooth.c>
 	<Servo.h>
 
-1385525053 e:\users\dlthrasher\development\arduino\quadcopter\bluetooth.c
+1386374001 e:\users\dlthrasher\development\arduino\quadcopter\bluetooth.c
 	<Arduino.h>
 
