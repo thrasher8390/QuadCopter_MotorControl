@@ -40,16 +40,19 @@ void bluetoothReceiveLoop() {
         }
     }
   }
-
+digitalWrite(ledpin, HIGH);
   if( valIndex == 0x3 && (val[0] == 0x10 || val[0] == 0x11 || val[0] == 0x12 || val[0] == 0x20 || val[0] == 0x21 || val[0] == 0x22))               // if 'H' was received
   {
+      digitalWrite(ledpin, HIGH);
     valIndex = 0;
     if(currentPowerState == OFF && val[0] == 0x10)
     {
         requestedPowerState = IDLE;
+        digitalWrite(ledpin, LOW);
     }else if(currentPowerState == IDLE && val[0] == 0x20)
     {
         requestedPowerState = ON;
+        digitalWrite(ledpin, HIGH);
     }
     //Action down or action Move fo x,y
     else if(val[0] == 0x10 || val[0] == 0x11)
@@ -83,6 +86,7 @@ void bluetoothReceiveLoop() {
   {
       valIndex = 0;
       requestedPowerState = OFF;
+      digitalWrite(ledpin, LOW);
   }
   else
   {

@@ -16,7 +16,7 @@
 #define max_speed_hover 120
 #define min_speed_hover 75
 #define min_speed 68
-#define ACCEL_SENSITIVITY_BUFFER 0x100
+#define ACCEL_SENSITIVITY_BUFFER 0x0
 
 extern int ledpin;
 extern char x;
@@ -35,6 +35,8 @@ static double   absoluteValue(double);
 static void     transitionToIdleState(void);
 static void     transitionToOffState(void);
 static void     transitionToOnState(void);
+static void     approachNextTargetAccel(int, char);
+static void     determineNextTargetAccel(void);
 //Motor arrays
 //0 = -x/left (black arm)
 //1 = x/right (red arm)
@@ -56,8 +58,11 @@ double motorxy_hover_increment = .125;
 
 
 //Set by the forground and achieved by the background
-int targetAccelerometer_X = 0;
-int targetAccelerometer_Y = 0;
+
+int nextTargetAccelerometer_X = 0;/*\brief following used in forgroundMotorControl*/
+int nextTargetAccelerometer_Y = 0;/*\brief following used in forgroundMotorControl*/
+int goalTargetAccel_X = 0;/*\brief following used in forgroundMotorControl*/
+int goalTargetAccel_Y = 0;/*\brief following used in forgroundMotorControl*/
 
 //increase is the proportional term
 double xChange_d = 0;
@@ -77,15 +82,17 @@ double  correction  =   1.41732;
 *  The documentation block cannot be put after the enum!
 */
 enum POWER_STATES
-        {  OFF,      /**< \brief details the different states the motors can be in */
+        {  START_UP,
+            OFF,      /**< \brief details the different states the motors can be in */
            IDLE,     /**< \brief details the different states the motors can be in */
            ON        /**< \brief details the different states the motors can be in */
         };
 /********************************************//**
  *  \brief Used to keep the state of which the motors are in
  ***********************************************/
-POWER_STATES currentPowerState = OFF;
+POWER_STATES currentPowerState = START_UP;
 POWER_STATES requestedPowerState = OFF;
+
 void motorSetup()
 {
     motorArray[0].attach(3);
@@ -129,9 +136,69 @@ void MotorStateMachine()
 void ForegroundMotorDriver()
 {
     readAccel();
-    targetAccelerometer_X = 0;
-    targetAccelerometer_Y = 0;
+    determineNextTargetAccel();
+    approachNextTargetAccel(goalTargetAccel_X, 'x');
+    approachNextTargetAccel(goalTargetAccel_Y, 'y');
 }
+
+/**
+*\brief Looks at accel readings to determine if we should adjust the next target accelerometer values
+*/
+void determineNextTargetAccel(void)
+{
+
+    int x_NTA = xyz[0]-xyzCal[0];
+    int y_NTA = xyz[1] -xyzCal[1];
+
+    /*figure out goal for X-axis*/
+    if(((x_NTA > 0) && (nextTargetAccelerometer_X < 0)) ||
+       ((x_NTA < 0) && (nextTargetAccelerometer_X > 0))
+       )
+    {
+        nextTargetAccelerometer_X = x_NTA;
+    }
+
+    /*figure out goal for Y-axis*/
+    if(((y_NTA > 0) && (nextTargetAccelerometer_Y < 0)) ||
+       ((y_NTA < 0) && (nextTargetAccelerometer_Y > 0))
+       )
+    {
+        nextTargetAccelerometer_Y = y_NTA;
+    }
+}
+
+/**
+*\brief Increments The axis_next target closer to the final Target value
+*\param x ref value of the nextTargetAccelerometer
+*\param finalTargetAccel is where we are trying to get(this value can be changed depending on controller input *Turning)
+*\TODO need to stop using Global Variables!!!
+*/
+void approachNextTargetAccel(int finalTargetAccel,char axis)
+{
+    if(axis == 'x')
+    {
+        if(nextTargetAccelerometer_X < finalTargetAccel)
+        {
+            nextTargetAccelerometer_X++;
+        }
+        else if(nextTargetAccelerometer_X > finalTargetAccel)
+        {
+            nextTargetAccelerometer_X--;
+        }
+    }
+    else if (axis == 'y')
+    {
+        if(nextTargetAccelerometer_Y < finalTargetAccel)
+        {
+            nextTargetAccelerometer_Y++;
+        }
+        else if(nextTargetAccelerometer_Y > finalTargetAccel)
+        {
+            nextTargetAccelerometer_Y--;
+        }
+    }
+}
+
 
 /**
 *\brief This will be used as a PI controller that tries to get the copter to the setpoint which will be set from the foregroundMotorDriver()
@@ -143,8 +210,8 @@ void BackgroundMotorDriver()
 
 
     //if our reading for x is at -2 and our callibration is 0 but we set the target to be -1 then we are making more incremental steps to reaching our goal of stability
-    double xChange = xyz[0] - xyzCal[0] - targetAccelerometer_X;
-    double yChange = xyz[1] - xyzCal[1] - targetAccelerometer_Y;
+    double xChange = xyz[0] - xyzCal[0] - nextTargetAccelerometer_X;
+    double yChange = xyz[1] - xyzCal[1] - nextTargetAccelerometer_Y;
     //double zChange = xyz[2] - xyzCal[2];
 
     motorX(xChange);
@@ -157,7 +224,8 @@ void BackgroundMotorDriver()
 void MotorControl()
 {
     //if we have a new speed for a given motor than we adjust it
-    for(int i = 0 ; i < 4; i++) {
+    for(int i = 0 ; i < 4; i++)
+    {
       // sets the value (range from min_speed to max_speed):
 
       if(motorSpeedCorrection[i] != motorSpeedPrevious[i])
@@ -500,7 +568,7 @@ void motorBounds()
 */
 void transitionToOffState()
 {
-
+//digitalWrite(ledpin, HIGH);   // otherwise turn it OFF
     //reset STATE
         for(int i = 0; i < 4; i++)
         {
@@ -509,8 +577,15 @@ void transitionToOffState()
             motorSpeedCorrection[i] = motorSpeedHover[i];
             motorSpeedPrevious[i] = 0xFFFF;
         }
-        //digitalWrite(ledpin, HIGH);   // ready to fly!
-        motorBounds();
+
+        /*/brief reset the tartAccelerometer readings for X */
+        nextTargetAccelerometer_X = 0;
+        /*/brief reset the tartAccelerometer readings for Y */
+        nextTargetAccelerometer_Y = 0;
+        /*/brief reset the goal Accelerometer readings for Y */
+        goalTargetAccel_X = 0;
+        /*/brief reset the goal Accelerometer readings for Y */
+        goalTargetAccel_Y = 0;
         currentPowerState = OFF;
 }
 
@@ -523,7 +598,7 @@ void transitionToIdleState()
 
 
         //Motors initialized (they start spinning)
-        digitalWrite(ledpin, LOW);   // otherwise turn it OFF
+        //digitalWrite(ledpin, LOW);   // otherwise turn it OFF
      for(int i = 0; i < 4; i++)
         {
             motorSpeedHover[i] = min_speed;
