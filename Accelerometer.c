@@ -4,7 +4,7 @@
 #include <SPI.h>
 #include <Arduino.h>
 
-#define DEBUG 3
+#define DEBUG 0
 
 //Assign the Chip Select signal to pin 52.
 #define accelCS  10
@@ -16,6 +16,10 @@
 #define INT_ENABLE 0x2E
 #define FIFO_CTL 0x38
 #define INT_MAP 0x2F
+
+#define INT_SOURCE 0x30
+#define DATA_READY_BIT 0x8
+
 #define BW_RATE 0x2C
 #define DATAX0  0x32	//X-Axis Data 0
 #define DATAX1  0x33	//X-Axis Data 1
@@ -25,7 +29,7 @@
 #define DATAZ1  0x37	//Z-Axis Data 1
 
 double sensitivity = 0;
-
+extern int ledpin;
 //This buffer will hold values read from the ADXL345 registers.
 char values[6];
 char uid[1];
@@ -79,16 +83,16 @@ void accelSetup(){
     digitalWrite(accelCS, HIGH);
     //Before communication starts, the Chip Select pin needs to be set high.
     delay(5);
-    writeRegister(DATA_FORMAT, 0X01);// +/-4g
+    writeRegister(DATA_FORMAT, 0x01);// +/-4g
     sensitivity = 4;
     delay(5);
-    writeRegister(POWER_CTL, 0X08);
+    writeRegister(POWER_CTL, 0x08);
     delay(5);
-	writeRegister(INT_ENABLE, 0x80);	//Activate the 'Data Ready' Interrupt
+	writeRegister(INT_ENABLE, DATA_READY_BIT);	//Activate the 'Data Ready' Interrupt
 	delay(5);
 	writeRegister(INT_MAP, 0x7F);			//Sent the Data Ready Interrupt to the INT1 pin
 	delay(5);
-	writeRegister(BW_RATE, 0x0F);			//Set Output Rate to 3200 Hz
+	writeRegister(BW_RATE, 0x0A);			//Set Output Rate to 100 Hz When set to 0x0F (3200Hz) noise increase significantly
     delay(5);
     writeRegister(FIFO_CTL, 0X00);			//BYPASS
     delay(5);
@@ -112,7 +116,7 @@ void readAccel(){
     if(DEBUG > 2)
     {
         readRegister(0x00, 1, &uid[0]);
-        Serial.print(uid[0] & 0xFF,HEX);
+        //Serial.print(uid[0] & 0xFF,HEX);
         Serial.println();
         Serial.print(xyz[0], DEC);
         Serial.print(',');
@@ -124,8 +128,8 @@ void readAccel(){
 void accelCalibration()
 {
     //A whole second of sampling at 3200Hz
-    int numSamples = 720;//1 second
-
+    int numSamples = 720;
+    digitalWrite(ledpin, HIGH);
     int x1 =0, y1=0, z1=0;
     for(int i = 0 ; i < numSamples  ; i++)
     {
@@ -139,9 +143,10 @@ void accelCalibration()
         z1 += xyz[2];
     }
 
-    xyzCal[0] = x1/numSamples;
-    xyzCal[1] = y1/numSamples;
-    xyzCal[2] = z1/numSamples;
+    //TODO figure out if we need to calibrate.
+    xyzCal[0] = 0;//x1/numSamples;
+    xyzCal[1] = 0;//y1/numSamples;
+    xyzCal[2] = 0;//z1/numSamples;
     //Might be able to set offset register on ADXL345 instead of holding the Cal values
     if(DEBUG > 0)
     {
@@ -152,7 +157,7 @@ void accelCalibration()
         Serial.print(',');
         Serial.println(xyzCal[2], DEC);
     }
-    /*
+    /* TRYING TO CONFIGURE INTERNAL CALIBRATION
     //Cal x
     if(xyz[0] <= 0)
     {
@@ -182,6 +187,7 @@ void accelCalibration()
     int z0g = 1024/sensitivity;
     writeRegister(0x20, xyzCal[2]-z0g);
     */
+    digitalWrite(ledpin, LOW);
 }
 
 #endif

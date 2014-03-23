@@ -12,7 +12,7 @@
 //#include <BlueTooth.c>
 #include <Servo.h>
 
-#define max_speed 150
+#define max_speed 130
 #define max_speed_hover 120
 #define min_speed_hover 75
 #define min_speed 68
@@ -37,6 +37,7 @@ static void     transitionToOffState(void);
 static void     transitionToOnState(void);
 static void     approachNextTargetAccel(int, char);
 static void     determineNextTargetAccel(void);
+void MotorControl(void);
 //Motor arrays
 //0 = -x/left (black arm)
 //1 = x/right (red arm)
@@ -70,8 +71,8 @@ double yChange_d = 0;
 double xChange_i = 0;
 double yChange_i = 0;
 
-double kp = 1/256;  //proportional
-double ki = kp/64;  //integral
+double kp = 1/8;  //proportional
+double ki = kp/16;  //integral
 double kd = 0;//kp*.90; //derivative
 
 //determines how quickly motorSpeedCorrection returns to motorSpeedHover
@@ -82,10 +83,10 @@ double  correction  =   1.41732;
 *  The documentation block cannot be put after the enum!
 */
 enum POWER_STATES
-        {  START_UP,
+        {   START_UP,
             OFF,      /**< \brief details the different states the motors can be in */
-           IDLE,     /**< \brief details the different states the motors can be in */
-           ON        /**< \brief details the different states the motors can be in */
+            IDLE,     /**< \brief details the different states the motors can be in */
+            ON        /**< \brief details the different states the motors can be in */
         };
 /********************************************//**
  *  \brief Used to keep the state of which the motors are in
@@ -95,18 +96,18 @@ POWER_STATES requestedPowerState = OFF;
 
 void motorSetup()
 {
-    motorArray[0].attach(3);
+    //motorArray[0].attach(3);
     motorArray[1].attach(5);
-    motorArray[2].attach(6);
-    motorArray[3].attach(9);
+    //motorArray[2].attach(6);
+    //motorArray[3].attach(9);
 
     for(int i = 0; i<4;i++)
     {
         motorSpeedHover[i] = min_speed - 30 ;
         motorSpeedCorrection[i] = motorSpeedHover[i];
         motorSpeedPrevious[i] = 0xFFFF;
-        motorArray[i].write(motorSpeedHover[i]);
     }
+    MotorControl();
 }
 
 
@@ -121,6 +122,7 @@ void MotorStateMachine()
             break;
         case IDLE:
             transitionToIdleState();
+            //digitalWrite(ledpin, HIGH);
             break;
         case ON:
             transitionToOnState();
@@ -136,9 +138,9 @@ void MotorStateMachine()
 void ForegroundMotorDriver()
 {
     readAccel();
-    determineNextTargetAccel();
-    approachNextTargetAccel(goalTargetAccel_X, 'x');
-    approachNextTargetAccel(goalTargetAccel_Y, 'y');
+    //determineNextTargetAccel();
+    //approachNextTargetAccel(goalTargetAccel_X, 'x');
+    //approachNextTargetAccel(goalTargetAccel_Y, 'y');
 }
 
 /**
@@ -290,13 +292,13 @@ void motorX(double xAccel)
     {
         motorSpeedHover[0]+= motorxy_hover_increment;
         motorSpeedHover[1]-= motorxy_hover_increment;
-        digitalWrite(ledpin, HIGH);  // turn ON the LED
+        //digitalWrite(ledpin, HIGH);  // turn ON the LED
         x_hover_adjust = 0;
     }else if(x_hover_adjust < (-motorxy_hoveradjust_thresh))
     {
         motorSpeedHover[0]-= motorxy_hover_increment;
         motorSpeedHover[1]+= motorxy_hover_increment;
-        digitalWrite(ledpin, HIGH);  // turn ON the LED
+        //digitalWrite(ledpin, HIGH);  // turn ON the LED
         x_hover_adjust = 0;
     }
 
@@ -312,7 +314,8 @@ void motorX(double xAccel)
     double dervTemp = kd*xDiff;
     double totalAdjustment = (propTemp+intTemp+dervTemp);
 
-    double offset = (motorSpeedHover[0]-motorSpeedHover[1])/2;
+    //
+    double offset = 0;//(motorSpeedHover[0]-motorSpeedHover[1])/2;
     //At the end of every control/stabalize loop motorSpeedCorrection is set to motorSpeedHover. This way when control is called. motorspeedcorrection is changed and then stabalize makes necessary adjustments prior to turning copter.
     motorSpeedCorrection[0] = motorSpeedCorrection[0] + (totalAdjustment + offset);
     motorSpeedCorrection[1] = motorSpeedCorrection[1] - (totalAdjustment + offset);
@@ -347,13 +350,13 @@ void motorY(double yAccel)
     {
         motorSpeedHover[2]+= motorxy_hover_increment;
         motorSpeedHover[3]-= motorxy_hover_increment;
-        digitalWrite(ledpin, HIGH);  // turn ON the LED
+        //digitalWrite(ledpin, HIGH);  // turn ON the LED
         y_hover_adjust = 0;
     }else if(y_hover_adjust < (-motorxy_hoveradjust_thresh))
     {
         motorSpeedHover[2]-= motorxy_hover_increment;
         motorSpeedHover[3]+= motorxy_hover_increment;
-        digitalWrite(ledpin, LOW);  // turn ON the LED
+        //digitalWrite(ledpin, LOW);  // turn ON the LED
         y_hover_adjust = 0;
     }
 
@@ -369,7 +372,7 @@ void motorY(double yAccel)
     double totalAdjustment = (propTemp+intTemp+dervTemp);
 
     //Determines different motor power distrubution. Some motors are weaker than others.
-    double offset = (motorSpeedHover[2]-motorSpeedHover[3])/2;
+    double offset = 0;//(motorSpeedHover[2]-motorSpeedHover[3])/2;
 
     motorSpeedCorrection[2] = motorSpeedCorrection[2] + (totalAdjustment + offset);
     motorSpeedCorrection[3] = motorSpeedCorrection[3] - (totalAdjustment + offset);
@@ -638,6 +641,10 @@ void oscilateMotors()
         delay(3000);
         motorArray[4].write((int)0);
 
+}
+POWER_STATES GetCurrentPowerState(void)
+{
+    return currentPowerState;
 }
 
 double absoluteValue(double num)
